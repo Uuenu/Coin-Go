@@ -51,7 +51,19 @@ func (s Storage) AddRecord(page *storage.Page) (err error) {
 	return err
 }
 
-func (s Storage) RecordsList(limit int) ([]storage.Page, error) {
+func (s Storage) RecordsList(chatID int, limit int) ([]storage.Page, error) {
+	userCollection := s.DB.Collection(strconv.Itoa(chatID))
+	records := make([]*mongo.Cursor, 0)
+
+	for i := 0; i < limit; i++ {
+		result, err := userCollection.Find(context.TODO(), bson.M{"record_id": i}) // last id - i
+		if err != nil {
+			return nil, err
+		}
+		records = append(records, result)
+	}
+
+	// []
 
 	return nil, nil
 }
