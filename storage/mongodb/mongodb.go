@@ -2,8 +2,12 @@ package mongodb
 
 import (
 	"context"
+	"fmt"
+	"strconv"
+	lib "telegram-coin-go/lib/e"
 	"telegram-coin-go/storage"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -36,7 +40,22 @@ func New() *Storage {
 	return &s
 }
 
-func (s Storage) AddRecord(p *storage.Page) error {
+func (s Storage) AddRecord(page *storage.Page) (err error) {
+	defer func() { err = lib.WrapIfErr("can't save page", err) }()
+	userCollection := s.DB.Collection(strconv.Itoa(page.ChatID))
+	doc, err := DataToBson(page.Data)
+	result, err := userCollection.InsertOne(context.TODO(), doc)
 
-	return nil
+	fmt.Println(&result)
+
+	return err
+}
+
+func (s Storage) RecordsList(limit int) ([]storage.Page, error) {
+
+	return nil, nil
+}
+
+func DataToBson(data map[string]string) (bson.D, error) {
+	return nil, nil
 }

@@ -4,7 +4,7 @@ import "time"
 
 type Storage interface {
 	AddRecord(p *Page) error
-	RecordsList() []Page
+	RecordsList(limit int) ([]Page, error)
 }
 
 type Page struct {
