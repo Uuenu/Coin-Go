@@ -1,8 +1,13 @@
 package telegram
 
 import (
-	"telegram-coin-go\clients\telegram"
-	"telegram-coin-go\storage"
+	"telegram-coin-go/clients/telegram"
+	"telegram-coin-go/storage"
+)
+
+const (
+	getUpdatesMethod  = "getUpdates"
+	sendMessageMethod = "sendMessage"
 )
 
 type TgProcessor struct {
@@ -11,9 +16,9 @@ type TgProcessor struct {
 	storage storage.Storage
 }
 
-func New(client *telegra.Client, storage storage.Storage) *TgProcessor {
+func New(client *telegram.Client, storage storage.Storage) *TgProcessor {
 	return &TgProcessor{
-		tg: client, 
+		tg:      client,
 		storage: storage,
-	}	
+	}
 }
