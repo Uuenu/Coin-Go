@@ -40,10 +40,10 @@ func New() *Storage {
 	return &s
 }
 
-func (s Storage) AddRecord(page *storage.Page) (err error) {
+func (s Storage) AddRecord(page *storage.Record) (err error) {
 	defer func() { err = lib.WrapIfErr("can't save page", err) }()
 	userCollection := s.DB.Collection(strconv.Itoa(page.ChatID))
-	doc, err := DataToBson(page.Data)
+	doc, err := RecordToBson(page)
 	result, err := userCollection.InsertOne(context.TODO(), doc)
 
 	fmt.Println(&result)
@@ -51,7 +51,7 @@ func (s Storage) AddRecord(page *storage.Page) (err error) {
 	return err
 }
 
-func (s Storage) RecordsList(chatID int, limit int) ([]storage.Page, error) {
+func (s Storage) RecordsList(chatID int, limit int) ([]storage.Record, error) {
 	userCollection := s.DB.Collection(strconv.Itoa(chatID))
 	records := make([]*mongo.Cursor, 0)
 
@@ -68,6 +68,32 @@ func (s Storage) RecordsList(chatID int, limit int) ([]storage.Page, error) {
 	return nil, nil
 }
 
-func DataToBson(data map[string]string) (bson.D, error) {
-	return nil, nil
+func (s Storage) LastCredit(chatID int) (string, string, error) {
+	userCollection := s.DB.Collection(strconv.Itoa(chatID))
+	var record bson.M
+	err := userCollection.FindOne(context.TODO(), bson.M{"$natural": -1}).Decode(&record) // !!!
+	if err != nil {
+		return "", "", err
+	}
+	data := record["Data"].(map[string]string) // interface to map
+	debit := data["Debit"]
+	credit := data["Credit"]
+
+	// Get Debit Credit
+	return debit, credit, nil
+}
+
+func RecordToBson(record *storage.Record) (bson.D, error) {
+	result := bson.D{
+		{Key: "ChatID", Value: record.ChatID},
+		{Key: "Username", Value: record.Username},
+		{Key: "Time", Value: record.Time},
+		{Key: "Data", Value: bson.D{
+			{Key: "Debit", Value: record.Data["debit"]},
+			{Key: "Credit", Value: record.Data["credit"]},
+			{Key: "Sum", Value: record.Data["sum"]},
+			//{Key: "Text", Value: record.Data["text"]},
+		}},
+	}
+	return result, nil
 }

@@ -1,4 +1,8 @@
 {
-    "debit": "sfadf"
+    "debit": 20000,
+    "credit": 11370, 
+    "date": "time",
+    "Sum": 990,
+    "Text": "продукты"
     
 }

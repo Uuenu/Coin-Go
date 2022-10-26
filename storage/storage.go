@@ -3,13 +3,14 @@ package storage
 import "time"
 
 type Storage interface {
-	AddRecord(p *Page) error
-	RecordsList(limit int) ([]Page, error)
+	AddRecord(p *Record) error
+	RecordsList(limit int) ([]Record, error)
+	LastCredit(chatID int) (string, string, error)
 }
 
-type Page struct {
-	Data     map[string]string
+type Record struct {
 	Username string
 	ChatID   int
-	Date     time.Time
+	Time     time.Time
+	Data     map[string]string
 }
