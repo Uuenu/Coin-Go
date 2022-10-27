@@ -10,10 +10,11 @@ import (
 )
 
 const (
-	RndCmd    = "/rnd"
-	HelpCmd   = "/help"
-	StartCmd  = "/start"
-	AddRecord = "/record"
+	RndCmd       = "/rnd"
+	HelpCmd      = "/help"
+	StartCmd     = "/start"
+	AddRecord    = "/record"
+	DebitnCredit = "/upd"
 )
 
 func (p *TgProcessor) doCmd(text string, chatID int, username string) error {
