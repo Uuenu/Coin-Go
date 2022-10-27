@@ -6,7 +6,6 @@ import (
 	"strconv"
 	lib "telegram-coin-go/lib/e"
 	"telegram-coin-go/storage"
-	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -53,19 +52,19 @@ func (s Storage) AddRecord(page *storage.Record) (err error) {
 	return err
 }
 
-func (s Storage) UpdateLastRecord(chatID int, record map[string]string) (err error) {
+func (s Storage) UpdateLastRecord(chatID int, sum float64) (err error) {
 	userCollection := s.DB.Collection(strconv.Itoa(chatID))
 
 	// get last record
 	data, _, _ := s.LastRecord(chatID)
 
+	fmt.Println(data)
+
 	lastSum, _ := strconv.ParseFloat(data["Sum"], 64)
 
-	nwRecSum, _ := strconv.ParseFloat(record["Sum"], 64)
-
-	updateSum := lastSum + nwRecSum
+	updateSum := lastSum + sum
 	// calc new sum
-
+	fmt.Println("SUMS ", lastSum, "+", sum, "=", updateSum)
 	// update
 	update := bson.D{
 		{Key: "Data", Value: bson.D{
@@ -77,7 +76,8 @@ func (s Storage) UpdateLastRecord(chatID int, record map[string]string) (err err
 	}
 
 	opts := options.FindOneAndUpdate().SetSort(bson.M{"$natural": -1})
-	userCollection.FindOneAndUpdate(context.TODO(), bson.M{}, update, opts)
+	result := userCollection.FindOneAndUpdate(context.TODO(), bson.M{}, update, opts)
+	fmt.Println("Result Update: ", result)
 
 	return nil
 }
@@ -99,14 +99,14 @@ func (s Storage) RecordsList(chatID int, limit int) ([]storage.Record, error) {
 	return nil, nil
 }
 
-func (s Storage) LastRecord(chatID int) (map[string]string, time.Time, error) {
+func (s Storage) LastRecord(chatID int) (map[string]string, string, error) {
 
 	userCollection := s.DB.Collection(strconv.Itoa(chatID))
 
 	opts := options.FindOne().SetSort(bson.M{"$natural": -1})
 	var lastrecord bson.M
 	if err := userCollection.FindOne(context.TODO(), bson.M{}, opts).Decode(&lastrecord); err != nil {
-		return nil, time.Time{}, err
+		return nil, "", err
 	}
 
 	data := lastrecord["Data"].(primitive.M)
@@ -115,7 +115,7 @@ func (s Storage) LastRecord(chatID int) (map[string]string, time.Time, error) {
 		result[key] = fmt.Sprintf("%s", value)
 	}
 
-	recTime := lastrecord["Time"].(time.Time)
+	recTime := lastrecord["Time"].(string)
 
 	fmt.Println("data + time ", result, " ", recTime, " ")
 	return result, recTime, nil

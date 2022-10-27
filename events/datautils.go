@@ -20,7 +20,7 @@ func NewData(sum float64) map[string]string {
 	return result
 }
 
-func LastData(chatID int, sum float64, s storage.Storage) (map[string]string, time.Time, error) {
+func LastData(chatID int, sum float64, s storage.Storage) (map[string]string, string, error) {
 	result := make(map[string]string, 0)
 
 	data, recTime, err := s.LastRecord(chatID) // get Debit, Credit and Time from last document in collection

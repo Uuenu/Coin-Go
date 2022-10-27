@@ -41,16 +41,17 @@ func (p *TgProcessor) doCmd(text string, chatID int, username string) error {
 func (p *TgProcessor) saveRecord(chatID int, sum float64, username string) (err error) {
 	defer func() { err = lib.WrapIfErr("can't do command: save page", err) }()
 
-	recData, recDate, err := events.LastData(chatID, sum, p.storage) // get data and time from last record
-	timeNow := time.Now()
+	_, recDate, err := events.LastData(chatID, sum, p.storage) // get data and time from last record
+	timeNow := time.Now().Format("2006-January-02")
 
-	if events.CheckTime(recDate, timeNow) {
-		p.storage.UpdateLastRecord(chatID, recData)
+	if timeNow == recDate {
+		fmt.Println("TIME THE SAME")
+		p.storage.UpdateLastRecord(chatID, sum)
 	} else {
 		record := &storage.Record{
 			ChatID:   chatID,
 			Username: username,
-			Time:     time.Now(),
+			Time:     time.Now().Format("2006-January-02"),
 			Data:     events.NewData(sum),
 		}
 		if err := p.storage.AddRecord(record); err != nil {
