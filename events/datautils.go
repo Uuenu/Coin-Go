@@ -3,13 +3,21 @@ package events
 import (
 	"strconv"
 	"telegram-coin-go/storage"
+	"time"
 )
 
-func RecData(chatID int, sum string, s storage.Storage) (map[string]string, error) {
+func CheckTime(lrTime, timeNow time.Time) bool {
+	lrDay, lrMonth, lrYear := lrTime.Date()
+	nowDay, nowMonth, nowYear := timeNow.Date()
+
+	return lrDay == nowDay && lrMonth == nowMonth && lrYear == nowYear
+}
+
+func RecData(chatID int, sum float64, s storage.Storage) (map[string]string, time.Time, error) {
 	result := make(map[string]string, 0)
-	lastDebit, lastCredit, err := s.LastCredit(chatID) // get Debit/Credit from last document in collection
+	lastDebit, lastCredit, recTime, err := s.LastRecord(chatID) // get Debit/Credit from last document in collection
 	if err != nil {
-		return nil, err
+		return nil, recTime, err
 	}
 
 	iDebit, err := strconv.Atoi(lastDebit)
@@ -22,14 +30,10 @@ func RecData(chatID int, sum string, s storage.Storage) (map[string]string, erro
 
 	}
 
-	isum, err := strconv.Atoi(sum)
-	if err != nil {
-
-	}
-
-	result["Debit"] = strconv.Itoa(iDebit - isum)
-	result["Credit"] = strconv.Itoa(iCredit - isum)
-	result["Sum"] = strconv.Itoa(isum)
+	result["Debit"] = strconv.Itoa(iDebit - int(sum))
+	result["Credit"] = strconv.Itoa(iCredit - int(sum))
+	result["Sum"] = strconv.Itoa(int(sum))
+	//result["Time"] = recTime.GoString()
 	//result["Text"] = text
-	return result, nil
+	return result, recTime, nil
 }

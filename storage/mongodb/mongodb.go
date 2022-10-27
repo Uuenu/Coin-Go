@@ -6,6 +6,7 @@ import (
 	"strconv"
 	lib "telegram-coin-go/lib/e"
 	"telegram-coin-go/storage"
+	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -51,6 +52,23 @@ func (s Storage) AddRecord(page *storage.Record) (err error) {
 	return err
 }
 
+func (s Storage) UpdateLastRecord(chatID int, record map[string]string) (err error) {
+	userCollection := s.DB.Collection(strconv.Itoa(chatID))
+
+	update := bson.D{
+		{Key: "Data", Value: bson.D{
+			{Key: "Debit", Value: record["debit"]},
+			{Key: "Credit", Value: record["credit"]},
+			{Key: "Sum", Value: record["sum"]},
+			//{Key: "Text", Value: record.Data["text"]},
+		}},
+	}
+
+	userCollection.FindOneAndUpdate(context.TODO(), bson.M{"$natural": -1}, update)
+
+	return nil
+}
+
 func (s Storage) RecordsList(chatID int, limit int) ([]storage.Record, error) {
 	userCollection := s.DB.Collection(strconv.Itoa(chatID))
 	records := make([]*mongo.Cursor, 0)
@@ -68,19 +86,19 @@ func (s Storage) RecordsList(chatID int, limit int) ([]storage.Record, error) {
 	return nil, nil
 }
 
-func (s Storage) LastCredit(chatID int) (string, string, error) {
+func (s Storage) LastRecord(chatID int) (string, string, time.Time, error) {
 	userCollection := s.DB.Collection(strconv.Itoa(chatID))
 	var record bson.M
 	err := userCollection.FindOne(context.TODO(), bson.M{"$natural": -1}).Decode(&record) // !!!
 	if err != nil {
-		return "", "", err
+		return "", "", time.Now(), err
 	}
 	data := record["Data"].(map[string]string) // interface to map
 	debit := data["Debit"]
 	credit := data["Credit"]
+	recTime := record["Time"].(time.Time)
 
-	// Get Debit Credit
-	return debit, credit, nil
+	return debit, credit, recTime, nil
 }
 
 func RecordToBson(record *storage.Record) (bson.D, error) {
