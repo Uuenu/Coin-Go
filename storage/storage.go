@@ -4,7 +4,7 @@ import "time"
 
 type Storage interface {
 	AddRecord(p *Record) error
-	RecordsList(limit int) ([]Record, error)
+	RecordsList(chatID int, limit int) ([]Record, error)
 	LastRecord(chatID int) (map[string]string, time.Time, error)
 	UpdateLastRecord(chatID int, recData map[string]string) (err error)
 }

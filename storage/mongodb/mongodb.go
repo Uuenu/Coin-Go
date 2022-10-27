@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -55,16 +56,28 @@ func (s Storage) AddRecord(page *storage.Record) (err error) {
 func (s Storage) UpdateLastRecord(chatID int, record map[string]string) (err error) {
 	userCollection := s.DB.Collection(strconv.Itoa(chatID))
 
+	// get last record
+	data, _, _ := s.LastRecord(chatID)
+
+	lastSum, _ := strconv.ParseFloat(data["Sum"], 64)
+
+	nwRecSum, _ := strconv.ParseFloat(record["Sum"], 64)
+
+	updateSum := lastSum + nwRecSum
+	// calc new sum
+
+	// update
 	update := bson.D{
 		{Key: "Data", Value: bson.D{
 			//{Key: "Debit", Value: record["debit"]},
 			//{Key: "Credit", Value: record["credit"]},
-			{Key: "Sum", Value: record["sum"]},
+			{Key: "Sum", Value: strconv.FormatFloat(updateSum, 'f', 5, 64)},
 			//{Key: "Text", Value: record.Data["text"]},
 		}},
 	}
 
-	userCollection.FindOneAndUpdate(context.TODO(), bson.M{"$natural": -1}, update)
+	opts := options.FindOneAndUpdate().SetSort(bson.M{"$natural": -1})
+	userCollection.FindOneAndUpdate(context.TODO(), bson.M{}, update, opts)
 
 	return nil
 }
@@ -87,19 +100,26 @@ func (s Storage) RecordsList(chatID int, limit int) ([]storage.Record, error) {
 }
 
 func (s Storage) LastRecord(chatID int) (map[string]string, time.Time, error) {
-	userCollection := s.DB.Collection(strconv.Itoa(chatID))
-	var record bson.M
-	err := userCollection.FindOne(context.TODO(), bson.M{"$natural": -1}).Decode(&record) // !!!
-	if err != nil {
-		return nil, time.Now(), err
-	}
-	data := record["Data"].(map[string]string) // interface to map
-	//debit := data["Debit"]
-	//credit := data["Credit"]
-	recTime := record["Time"].(time.Time)
 
-	return data, recTime, nil
-	//return debit, credit, recTime, nil
+	userCollection := s.DB.Collection(strconv.Itoa(chatID))
+
+	opts := options.FindOne().SetSort(bson.M{"$natural": -1})
+	var lastrecord bson.M
+	if err := userCollection.FindOne(context.TODO(), bson.M{}, opts).Decode(&lastrecord); err != nil {
+		return nil, time.Time{}, err
+	}
+
+	data := lastrecord["Data"].(primitive.M)
+	result := make(map[string]string)
+	for key, value := range data {
+		result[key] = fmt.Sprintf("%s", value)
+	}
+
+	recTime := lastrecord["Time"].(time.Time)
+
+	fmt.Println("data + time ", result, " ", recTime, " ")
+	return result, recTime, nil
+
 }
 
 func RecordToBson(record *storage.Record) (bson.D, error) {
@@ -110,7 +130,7 @@ func RecordToBson(record *storage.Record) (bson.D, error) {
 		{Key: "Data", Value: bson.D{
 			//{Key: "Debit", Value: record.Data["debit"]},
 			//{Key: "Credit", Value: record.Data["credit"]},
-			{Key: "Sum", Value: record.Data["sum"]},
+			{Key: "Sum", Value: record.Data["Sum"]},
 			//{Key: "Text", Value: record.Data["text"]},
 		}},
 	}

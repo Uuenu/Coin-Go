@@ -14,9 +14,17 @@ func CheckTime(lrTime, timeNow time.Time) bool {
 	return lrDay == nowDay && lrMonth == nowMonth && lrYear == nowYear
 }
 
-func RecData(chatID int, sum float64, s storage.Storage) (map[string]string, time.Time, error) {
+func NewData(sum float64) map[string]string {
+	result := make(map[string]string)
+	result["Sum"] = strconv.FormatFloat(sum, 'f', 5, 64)
+	return result
+}
+
+func LastData(chatID int, sum float64, s storage.Storage) (map[string]string, time.Time, error) {
 	result := make(map[string]string, 0)
+
 	data, recTime, err := s.LastRecord(chatID) // get Debit, Credit and Time from last document in collection
+
 	if err != nil {
 		return nil, recTime, lib.Wrap("can't get last record from db", err)
 	}

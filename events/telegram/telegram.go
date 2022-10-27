@@ -51,7 +51,7 @@ func (p *TgProcessor) Fetch(limit int) ([]events.Event, error) {
 	return res, nil
 }
 
-func (p *TgProcessor) Process(event events.Event) error {
+func (p *TgProcessor) Proccess(event events.Event) error {
 	switch event.Type {
 	case events.Message:
 		return p.processMessage(event)

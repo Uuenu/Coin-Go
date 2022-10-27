@@ -1,6 +1,7 @@
 package telegram
 
 import (
+	"fmt"
 	"log"
 	"strconv"
 	"telegram-coin-go/events"
@@ -22,15 +23,17 @@ func (p *TgProcessor) doCmd(text string, chatID int, username string) error {
 	log.Printf("got new command '%s' from '%s' ", text, username)
 
 	m_float, err := strconv.ParseFloat(text, 64)
-	if err != nil {
+	fmt.Println(m_float, " ", err)
+	if err == nil && m_float != 0 {
+		fmt.Println("here")
 		return p.saveRecord(chatID, m_float, username)
 	}
 
-	switch text {
-	case AddRecord:
-		//send messege "print sum"
-		//p.sum(chatID, username)
-	}
+	// switch text {
+	// case AddRecord:
+	// 	//send messege "print sum"
+	// 	//p.sum(chatID, username)
+	// }
 
 	return nil
 }
@@ -38,8 +41,7 @@ func (p *TgProcessor) doCmd(text string, chatID int, username string) error {
 func (p *TgProcessor) saveRecord(chatID int, sum float64, username string) (err error) {
 	defer func() { err = lib.WrapIfErr("can't do command: save page", err) }()
 
-	recData, recDate, err := events.RecData(chatID, sum, p.storage) // get data and time from last record
-
+	recData, recDate, err := events.LastData(chatID, sum, p.storage) // get data and time from last record
 	timeNow := time.Now()
 
 	if events.CheckTime(recDate, timeNow) {
@@ -49,7 +51,7 @@ func (p *TgProcessor) saveRecord(chatID int, sum float64, username string) (err 
 			ChatID:   chatID,
 			Username: username,
 			Time:     time.Now(),
-			Data:     recData,
+			Data:     events.NewData(sum),
 		}
 		if err := p.storage.AddRecord(record); err != nil {
 			return err

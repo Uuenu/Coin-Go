@@ -3,11 +3,35 @@ package main
 import (
 	"flag"
 	"log"
+
+	tgClient "telegram-coin-go/clients/telegram"
+	eventconsumer "telegram-coin-go/consumer/event-consumer"
+	"telegram-coin-go/events/telegram"
+
+	"telegram-coin-go/storage/mongodb"
+)
+
+const (
+	tgBotHost   = "api.telegram.org"
+	storagePath = "files_storage"
+	batchSize   = 100
 )
 
 func main() {
-	// event proccessor
-	//consumer (fetcher, proccessor)
+	eventsProccessor := telegram.New(
+		tgClient.New(tgBotHost, mustToken()),
+		mongodb.New(), // monogdb
+
+	)
+
+	log.Print("service started")
+
+	consumer := eventconsumer.New(eventsProccessor, eventsProccessor, batchSize)
+
+	if err := consumer.Start(); err != nil {
+		log.Fatal()
+	}
+
 }
 
 func mustToken() string {
