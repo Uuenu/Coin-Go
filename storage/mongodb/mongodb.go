@@ -58,8 +58,6 @@ func (s Storage) UpdateLastRecord(chatID int, sum float64) (err error) {
 	// get last record
 	data, _, _ := s.LastRecord(chatID)
 
-	fmt.Println(data)
-
 	lastSum, _ := strconv.ParseFloat(data["Sum"], 64)
 
 	updateSum := lastSum + sum
@@ -76,8 +74,7 @@ func (s Storage) UpdateLastRecord(chatID int, sum float64) (err error) {
 	}
 
 	opts := options.FindOneAndUpdate().SetSort(bson.M{"$natural": -1})
-	result := userCollection.FindOneAndUpdate(context.TODO(), bson.M{}, update, opts)
-	fmt.Println("Result Update: ", result)
+	userCollection.FindOneAndUpdate(context.TODO(), bson.M{}, bson.M{"$set": update}, opts)
 
 	return nil
 }
@@ -116,8 +113,6 @@ func (s Storage) LastRecord(chatID int) (map[string]string, string, error) {
 	}
 
 	recTime := lastrecord["Time"].(string)
-
-	fmt.Println("data + time ", result, " ", recTime, " ")
 	return result, recTime, nil
 
 }
