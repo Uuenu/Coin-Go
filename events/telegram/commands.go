@@ -30,9 +30,18 @@ func (p *TgProcessor) doCmd(text string, chatID int, username string) error {
 
 	switch text {
 	case Today:
-
+		p.Today(chatID)
 	}
 
+	return nil
+}
+
+func (p *TgProcessor) Today(chatID int) error {
+	result, err := p.storage.Today(chatID)
+	if err != nil {
+		return err
+	}
+	p.tg.SendMessage(chatID, "Total: "+strconv.FormatFloat(result.Day.Total, 'f', 5, 64))
 	return nil
 }
 

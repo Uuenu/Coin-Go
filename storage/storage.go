@@ -6,6 +6,7 @@ type Storage interface {
 	LastRecord(chatID int) (result Record, err error)
 	UpdateLastRecord(chatID int, sum float64) (err error)
 	CheckTime(ChatID int, TimeNow string) bool
+	Today(chatID int) (Record, error)
 }
 
 type Record struct {

@@ -55,7 +55,7 @@ func (s Storage) UpdateLastRecord(chatID int, sum float64) (err error) {
 
 	update := bson.D{
 		{Key: "day", Value: bson.D{
-			{Key: "sum", Value: lastSum + sum},
+			{Key: "total", Value: lastSum + sum},
 		}},
 	}
 
@@ -78,7 +78,7 @@ func (s Storage) LastRecord(chatID int) (result storage.Record, err error) {
 	if err = userCollection.FindOne(context.TODO(), bson.M{}, opts).Decode(&result); err != nil {
 		return storage.Record{}, err
 	}
-
+	fmt.Println("Last Record", result)
 	return result, err
 
 }
