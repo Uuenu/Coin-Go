@@ -4,14 +4,13 @@ import (
 	"fmt"
 	"log"
 	"strconv"
-	"telegram-coin-go/events"
 	lib "telegram-coin-go/lib/e"
 	"telegram-coin-go/storage"
 	"time"
 )
 
 const (
-	RndCmd       = "/rnd"
+	Today        = "/today"
 	HelpCmd      = "/help"
 	StartCmd     = "/start"
 	AddRecord    = "/record"
@@ -29,11 +28,10 @@ func (p *TgProcessor) doCmd(text string, chatID int, username string) error {
 		return p.saveRecord(chatID, m_float, username)
 	}
 
-	// switch text {
-	// case AddRecord:
-	// 	//send messege "print sum"
-	// 	//p.sum(chatID, username)
-	// }
+	switch text {
+	case Today:
+
+	}
 
 	return nil
 }
@@ -41,18 +39,18 @@ func (p *TgProcessor) doCmd(text string, chatID int, username string) error {
 func (p *TgProcessor) saveRecord(chatID int, sum float64, username string) (err error) {
 	defer func() { err = lib.WrapIfErr("can't do command: save page", err) }()
 
-	_, recDate, err := events.LastData(chatID, sum, p.storage) // get data and time from last record
 	timeNow := time.Now().Format("2006-January-02")
 
-	if timeNow == recDate {
-		fmt.Println("TIME THE SAME")
+	if p.storage.CheckTime(chatID, timeNow) {
 		p.storage.UpdateLastRecord(chatID, sum)
 	} else {
 		record := &storage.Record{
 			ChatID:   chatID,
 			Username: username,
 			Time:     time.Now().Format("2006-January-02"),
-			Data:     events.NewData(sum),
+			Day: storage.Day{
+				Total: sum,
+			},
 		}
 		if err := p.storage.AddRecord(record); err != nil {
 			return err

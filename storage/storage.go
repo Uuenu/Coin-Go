@@ -2,14 +2,19 @@ package storage
 
 type Storage interface {
 	AddRecord(p *Record) error
-	RecordsList(chatID int, limit int) ([]Record, error)
-	LastRecord(chatID int) (map[string]string, string, error)
+	DaysList(chatID int, limit int) ([]Record, error)
+	LastRecord(chatID int) (result Record, err error)
 	UpdateLastRecord(chatID int, sum float64) (err error)
+	CheckTime(ChatID int, TimeNow string) bool
 }
 
 type Record struct {
-	Username string
-	ChatID   int
-	Time     string
-	Data     map[string]string
+	ChatID   int    `json:"chat_id" bson:"chat_id"`
+	Username string `json:"username" bson:"username"`
+	Time     string `json:"time" bson:"time"`
+	Day      Day    `json:"day" bson:"day"`
+}
+
+type Day struct {
+	Total float64 `json:"total" bson:"total"`
 }
